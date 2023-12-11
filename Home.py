@@ -30,7 +30,7 @@ body = st.container()
 footer = st.container()
 
 with header:
-    st.title("Gilt Edged App")
+    st.title("Gilt Edged")
     st.info("The app may change, break, or disappear at any time.")
     st.write("Visit [GiltEdged.net](https://www.giltedged.net). Part of a self-directed learning [project](https://www.modernmoney.studio).")
 
