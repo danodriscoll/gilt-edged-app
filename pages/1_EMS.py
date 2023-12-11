@@ -23,7 +23,7 @@ if 'button' not in st.session_state:
 # Functions
 def query_S3(file_name, sql):
     # Create connection object and retrieve file contents.
-    # Specify input format is a csv and to cache the result for 600 seconds.
+    # Specify input format is a csv and to cache the result for 900 seconds.
     conn = st.connection('s3', type=FilesConnection)
     df = conn.read(file_name, input_format="csv", ttl=900)
     
@@ -123,7 +123,7 @@ with header:
     with col1:
         st.header("Early Modern System (EMS)")
         st.write("The historical velocity of the monetary system in a British military and economic context.")
-        with st.status("Importing Data..", expanded=False) as status:            
+        with st.status("Importing Data..", expanded=False) as status:
             # Min max date range.
             start_period = "1698-01-01"
             end_period = "1974-12-01"
