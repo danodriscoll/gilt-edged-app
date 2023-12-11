@@ -3,6 +3,7 @@ from datetime import date
 import streamlit as st
 from st_files_connection import FilesConnection
 import duckdb
+import plotly.graph_objects as go
 
 st.set_page_config(
     layout="wide",
@@ -39,6 +40,44 @@ def get_fragment(df, start, end):
     sql = f"SELECT * FROM df WHERE date >= '{start}' AND date <= '{end}'"
     return duckdb.sql(sql).df()
 
+# Velocity of bills scatter chart (analysis_chart_01)
+def analysis_chart_01(df):
+    goFig = go.Figure()
+
+    goFig.add_trace(go.Scatter(x=df.date, y=df.velocity_bills,
+        mode='lines',
+        name='Bills Velocity'))
+
+    goFig.add_trace(go.Scatter(x=df.date, y=df.velocity_bills_trend,
+        mode='lines',
+        name='Bills Trend'))
+
+    goFig.add_trace(go.Scatter(x=df.date, y=df.yield_rate,
+        mode='lines',
+        name='Real Yield'))
+
+    goFig.update_layout(
+        margin=dict(l=50,r=40,b=40,t=40),
+        template="gridon",
+        xaxis_title="Financial Quarters",
+        xaxis_tickfont_size=12,
+        yaxis=dict(
+            title='Percent',
+            titlefont_size=14,
+            tickfont_size=12,
+        ),
+        yaxis_zeroline=False,
+        xaxis_zeroline=False,
+        showlegend=True,
+        legend_title="Analysis Series",
+        height=800
+    )
+
+    goFig.update_yaxes(
+        type="log" if yaxis_type else "linear"
+    )
+
+    st.plotly_chart(goFig, use_container_width=True, sharing='streamlit')
 
 if st.session_state.disclaimer_setting:
     with st.status("Importing Data..", expanded=False) as status:
@@ -46,27 +85,26 @@ if st.session_state.disclaimer_setting:
         start_period = "1974-01-01"
         end_period = "2025-12-01"
         # Model output analysis
-        st.text("Model Time-Series")
+        st.text("Model Amalysis Time-Series")
         df_model = query_S3(
             "s3://studio-model-analysis/model_lp_analysis/cms_model-analysis-private-1.csv",
-            f"SELECT date, velocity_bills, velocity_bills_trend, fiscal_balance FROM df WHERE date >= '{start_period}' AND date <= '{end_period}'"
+            f"SELECT date, velocity_bills, velocity_bills_trend, fiscal_balance, yield_rate FROM df WHERE date >= '{start_period}' AND date <= '{end_period}'"
         )
         status.update(label="Data Imported.", state="complete", expanded=False)
 
 # Layout
 header = st.container()
 body = st.container()
-footer = st.container()
 
 with header:
     st.header("Contemporary Modern System (CMS)")
-    today = date.today()
-    st.write("Today is ", today.strftime('%A %d. %B %Y'), ". The model consumes real-world economic time-series data from 1974 to present day.")
 
 with body:
     # Sidebar
     if st.session_state.disclaimer_setting:
         with st.sidebar:
+            today = date.today()
+            st.write("Today: ", today.strftime('%A %d. %B %Y'))
             st.header("Date Range")
             start_date = st.date_input(
                 label="From",
@@ -87,30 +125,30 @@ with body:
         if end_date < start_date:
             start_date = date(1974, 1, 1)
             end_date = date(2025, 1, 1)
+            st.session_state.val_start_date = start_date
+            st.session_state.val_end_date = end_date
 
         df_run_01 = get_fragment(df_model, start_date, end_date)
 
     # Central
-    st.subheader("Central")
+    st.subheader("Velocity of Model Bills Issued")
 
     if st.session_state.disclaimer_setting:
 
-        curr_symbol = "£"
-        min_balance = curr_symbol + "{:0,.0f}".format(df_run_01.fiscal_balance.min())
-        max_balance = curr_symbol + "{:0,.0f}".format(df_run_01.fiscal_balance.max())
-        mean_balance = curr_symbol + "{:0,.0f}".format(df_run_01.fiscal_balance.mean())
+        min_velocity = "{:0,.3%}".format((df_run_01.velocity_bills.min() / 100))
+        max_velocity = "{:0,.3%}".format((df_run_01.velocity_bills.max() / 100))
+        mean_velocity = "{:0,.3%}".format((df_run_01.velocity_bills.mean() / 100))
 
         col1, col2, col3, col4 = st.columns(4)
 
         col1.metric("Finanacial Quarters", len(df_run_01))
-        col2.metric("Min Fiscal Balance", min_balance)
-        col3.metric("Max Fiscal Balance", max_balance)
-        col4.metric("Mean Fiscal Balance", mean_balance)
+        col2.metric("Min Velocity Percent", min_velocity)
+        col3.metric("Max Velocity Percent", max_velocity)
+        col4.metric("Mean Velocity Percent", mean_velocity)
         
-        st.dataframe(data=df_run_01, hide_index=True, use_container_width=True)
+        # st.dataframe(data=df_run_01, hide_index=True, use_container_width=True)
+        yaxis_type = st.checkbox(label="Log_yaxis", value=False)
+        analysis_chart_01(df_run_01)
 
     else:
         st.warning("Please read and accept the disclaimer on the Home page.")
-
-with footer:
-    st.caption("Footer")

@@ -122,19 +122,18 @@ with header:
 
     with col1:
         st.header("Early Modern System (EMS)")
-        st.write("The historical velocity of the monetary system in a British military and economic context.")
         with st.status("Importing Data..", expanded=False) as status:
             # Min max date range.
             start_period = "1698-01-01"
             end_period = "1974-12-01"
             # Model output analysis
-            st.text("Model Time-Series")
+            st.text("Model Analysis Time-Series")
             df_model = query_S3(
                 "s3://studio-model-analysis/model_lp_analysis/ems_model-analysis-private-1.csv",
                 f"SELECT date, velocity_bills, velocity_bills_trend, fiscal_balance FROM df WHERE date >= '{start_period}' AND date <= '{end_period}'"
             )
             # Period events
-            st.text("Events Time-Series")
+            st.text("Military and Economic Events Time-Series")
             df_events = load_events(
                 "https://huggingface.co/datasets/DanODrisc/gilt_edged/raw/main/ems_events",
                 1000 # number of events across the period.
