@@ -46,11 +46,11 @@ def analysis_chart_01(df):
 
     goFig.add_trace(go.Scatter(x=df.date, y=df.velocity_bills,
         mode='lines',
-        name='Bills Velocity'))
+        name='Model Bills'))
 
     goFig.add_trace(go.Scatter(x=df.date, y=df.velocity_bills_trend,
         mode='lines',
-        name='Bills Trend'))
+        name='Model Trend'))
 
     goFig.add_trace(go.Scatter(x=df.date, y=df.yield_rate,
         mode='lines',
